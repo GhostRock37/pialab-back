@@ -19,7 +19,7 @@ use PiaApi\Form\Application\RemoveApplicationForm;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use PiaApi\Services\ApplicationService;
+use PiaApi\Service\ApplicationService;
 
 class ApplicationController extends BackOfficeAbstractController
 {
@@ -96,23 +96,23 @@ class ApplicationController extends BackOfficeAbstractController
      */
     public function editApplicationAction(Request $request)
     {
-        $userId = $request->get('applicationId');
-        $user = $this->getDoctrine()->getRepository(Client::class)->find($userId);
+        $appId = $request->get('applicationId');
+        $app = $this->getDoctrine()->getRepository(Client::class)->find($appId);
 
-        if ($user === null) {
-            throw new NotFoundHttpException(sprintf('Application « %s » does not exist', $userId));
+        if ($app === null) {
+            throw new NotFoundHttpException(sprintf('Application « %s » does not exist', $appId));
         }
 
-        $form = $this->createForm(EditApplicationForm::class, $user, [
-            'action' => $this->generateUrl('manage_applications_edit_application', ['applicationId' => $user->getId()]),
+        $form = $this->createForm(EditApplicationForm::class, $app, [
+            'action' => $this->generateUrl('manage_applications_edit_application', ['applicationId' => $app->getId()]),
         ]);
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $client = $form->getData();
+            $app = $form->getData();
 
-            $this->getDoctrine()->getManager()->persist($client);
+            $this->getDoctrine()->getManager()->persist($app);
             $this->getDoctrine()->getManager()->flush();
 
             return $this->redirect($this->generateUrl('manage_applications'));
@@ -132,26 +132,26 @@ class ApplicationController extends BackOfficeAbstractController
     public function removeApplicationAction(Request $request)
     {
         $applicationId = $request->get('applicationId');
-        $user = $this->getDoctrine()->getRepository(Client::class)->find($applicationId);
+        $app = $this->getDoctrine()->getRepository(Client::class)->find($applicationId);
 
-        if ($user === null) {
+        if ($app === null) {
             throw new NotFoundHttpException(sprintf('Appllication « %s » does not exist', $applicationId));
         }
 
-        $form = $this->createForm(RemoveApplicationForm::class, $user, [
-            'action' => $this->generateUrl('manage_applications_remove_application', ['applicationId' => $user->getId()]),
+        $form = $this->createForm(RemoveApplicationForm::class, $app, [
+            'action' => $this->generateUrl('manage_applications_remove_application', ['applicationId' => $app->getId()]),
         ]);
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $application = $form->getData();
+            $app = $form->getData();
 
-            foreach ($application->getUsers() as $user) {
+            foreach ($app->getUsers() as $user) {
                 $user->setApplication(null);
             }
 
-            $this->getDoctrine()->getManager()->remove($application);
+            $this->getDoctrine()->getManager()->remove($app);
             $this->getDoctrine()->getManager()->flush();
 
             return $this->redirect($this->generateUrl('manage_applications'));
